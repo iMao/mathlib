@@ -1,6 +1,8 @@
 #ifndef MAT_H
 #define MAT_H
 
+#include <string.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -8,6 +10,33 @@
 
 namespace la {
 
+#define MSG_LENGTH 256
+
+class NotEqualMatSize : public std::exception {
+  char warning_msg_[MSG_LENGTH]{};
+
+ public:
+  explicit NotEqualMatSize(const char* msg) { strcpy(warning_msg_, msg); }
+  virtual const char* what() const _GLIBCXX_TXN_SAFE_DYN
+      _GLIBCXX_NOTHROW override {
+    return warning_msg_;
+  }
+};
+
+class IncorrectIndex : public std::exception {
+  char warning_msg_[MSG_LENGTH]{};
+
+ public:
+  explicit IncorrectIndex(const char* msg) { strcpy(warning_msg_, msg); }
+  virtual const char* what() const _GLIBCXX_TXN_SAFE_DYN
+      _GLIBCXX_NOTHROW override {
+    return warning_msg_;
+  }
+};
+
+///
+/// \brief The Mat class - container for matrix with elements <T>
+///
 template <typename T>
 class Mat {
  private:
@@ -34,23 +63,31 @@ class Mat {
       for (int i = 0; i < quantity_; i++) {
         ptr_[i] = val;
       }
-    } catch (const std::exception& e) {
+    } catch (const std::bad_alloc& e) {
       std::cerr << e.what() << std::endl;
     }
   }
 
   Mat(const Mat& m) {
-    rows_ = m.rows_;
-    cols_ = m.cols_;
-    quantity_ = m.quantity_;
+    int quantity = m.rows_ * m.cols_;
     try {
-      ptr_ = new T[quantity_];
-      for (int i = 0; i < quantity_; i++) {
+      ptr_ = new T[quantity];
+    } catch (const std::bad_alloc& e) {
+      std::cerr << e.what() << std::endl;
+    }
+
+    try {
+      for (int i = 0; i < quantity; i++) {
         ptr_[i] = m.ptr_[i];
       }
     } catch (const std::exception& e) {
       std::cerr << e.what() << std::endl;
     }
+
+    //---------Calba's line------------------
+    rows_ = m.rows_;
+    cols_ = m.cols_;
+    quantity_ = quantity;
   }
 
   Mat(Mat&& m) noexcept {
@@ -62,18 +99,25 @@ class Mat {
   }
 
   Mat& operator=(const Mat& m) {
-    rows_ = m.rows_;
-    cols_ = m.cols_;
-    quantity_ = m.quantity_;
+    int quantity = m.rows_ * m.cols_;
 
     try {
-      ptr_ = new T[quantity_];
-      for (int i = 0; i < quantity_; i++) {
+      ptr_ = new T[quantity];
+    } catch (const std::bad_alloc& e) {
+      std::cerr << e.what() << std::endl;
+    }
+
+    try {
+      for (int i = 0; i < quantity; i++) {
         ptr_[i] = m.ptr_[i];
       }
     } catch (const std::exception& e) {
       std::cerr << e.what() << std::endl;
     }
+    //-------Calba's line-------------------
+    rows_ = m.rows_;
+    cols_ = m.cols_;
+    quantity_ = quantity;
 
     return *this;
   }
@@ -115,16 +159,15 @@ class Mat {
     for (int i = 0; i < quantity_; i++) {
       ptr_[i] = -(ptr_[i]);
     }
-
     return *this;
   }
 
   Mat& transpose() & {
     try {
       if (rows_ != cols_) {
-        throw "rows != cols";
+        throw NotEqualMatSize("rows != cols");
       }
-    } catch (const std::exception& e) {
+    } catch (const la::NotEqualMatSize& e) {
       std::cerr << e.what() << std::endl;
     }
 
@@ -178,14 +221,14 @@ class Mat {
   T& at(int y, int x) & {
     try {
       if (y >= rows_ || y < 0) {
-        throw "y - incorrect";
+        throw IncorrectIndex("y - incorrect");
       }
 
       if (x >= cols_ || x < 0) {
-        throw "x - incorrect";
+        throw IncorrectIndex("x - incorrect");
       }
 
-    } catch (const std::exception& e) {
+    } catch (const la::IncorrectIndex& e) {
       std::cerr << e.what() << std::endl;
     }
 
@@ -195,9 +238,9 @@ class Mat {
   static Mat CreateEye(int rows, int cols) {
     try {
       if (rows != cols) {
-        throw "rows != cols";
+        throw NotEqualMatSize("rows != cols");
       }
-    } catch (const std::exception& e) {
+    } catch (const la::NotEqualMatSize& e) {
       std::cerr << e.what() << std::endl;
     }
 
