@@ -56,7 +56,7 @@ class Mat {
   Mat() = delete;
 
   Mat(int rows, int cols, T val = T{})
-      : rows_(rows), cols_(cols), quantity_(rows_ * cols_) {
+      : rows_(rows), cols_(cols), quantity_(rows * cols) {
     try {
       ptr_ = new T[quantity_];
 
@@ -64,6 +64,28 @@ class Mat {
         ptr_[i] = val;
       }
     } catch (const std::bad_alloc& e) {
+      std::cerr << e.what() << std::endl;
+    }
+  }
+
+  Mat(int rows, int cols, T* scope_ptr, int scope_size, T val = T{})
+      : rows_(rows), cols_(cols), quantity_(rows * cols) {
+    try {
+      if (!scope_ptr) {
+        throw "scope_ptr == nullptr";
+      }
+
+      if (scope_size < quantity_ * sizeof(T)) {
+        throw "scope memory space is not enouph";
+      }
+
+      ptr_ = scope_ptr;
+
+      for (int i = 0; i < quantity_; i++) {
+        ptr_[i] = val;
+      }
+
+    } catch (const std::exception& e) {
       std::cerr << e.what() << std::endl;
     }
   }
