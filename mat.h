@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 
 #include "mat_exceptions.h"
@@ -176,6 +177,28 @@ class Mat {
     for (int y = 0; y < size; y++) {
       for (int x = y; x < size; x++) {
         std::swap(ptr_[y * size + x], ptr_[x * size + y]);
+      }
+    }
+    return *this;
+  }
+
+  Mat& mul(T number) & {
+    for (int i = 0; i < quantity_; i++) {
+      if ((std::numeric_limits<T>::max() / number) <= ptr_[i]) {
+        ptr_[i] = std::numeric_limits<T>::max();
+      } else {
+        ptr_[i] *= number;
+      }
+    }
+    return *this;
+  }
+
+  Mat& plus(T number) & {
+    for (int i = 0; i < quantity_; i++) {
+      if ((std::numeric_limits<T>::max() - number) <= ptr_[i]) {
+        ptr_[i] += number;
+      } else {
+        ptr_[i] = std::numeric_limits<T>::max();
       }
     }
     return *this;

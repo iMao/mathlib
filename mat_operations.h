@@ -22,7 +22,10 @@ bool add(const Mat<T> &m, const Mat<T> &n, Mat<T> &dst) {
   try {
     for (int y = 0; y < m.nrows(); y++) {
       for (int x = 0; x < m.ncols(); x++) {
-        dst.at(y, x) = m.at(y, x) + n.at(y, x);
+        if ((std::numeric_limits<T>::max() - n.at(y, x)) >= m.at(y, x))
+          dst.at(y, x) = m.at(y, x) + n.at(y, x);
+        else
+          dst.at(y, x) = std::numeric_limits<T>::max();
       }
     }
   } catch (const la::IncorrectIndex &e) {
@@ -52,7 +55,16 @@ bool mul(const Mat<T> &m, const Mat<T> &n, Mat<T> &dst) {
   for (int i = 0; i < m.nrows(); i++) {
     for (int j = 0; j < n.ncols(); j++) {
       for (int k = 0; k < m.ncols(); k++) {
-        dst.at(i, j) += m.at(i, k) * n.at(k, j);
+        if ((std::numeric_limits<T>::max() / n.at(k, j)) <= m.at(i, k)) {
+          return false;
+        }
+
+        T mul_result = m.at(i, k) * n.at(k, j);
+
+        if ((std::numeric_limits<T>::max() - mul_result) <= dst.at(i, j)) {
+          return false;
+        }
+        dst.at(i, j) += mul_result;
       }
     }
   }
