@@ -102,6 +102,10 @@ class Mat {
   Mat& operator=(const Mat& m) {
     int quantity = m.rows_ * m.cols_;
 
+    if (ptr_) {
+      delete[] ptr_;
+    }
+
     try {
       ptr_ = new T[quantity];
     } catch (const std::bad_alloc& e) {

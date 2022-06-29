@@ -2,6 +2,8 @@
 
 namespace la {
 
+inline const double TOLLERANCE{0.0001};
+
 ///
 /// \brief add - sum of src1 and src2 matrix
 /// \param m
@@ -70,6 +72,60 @@ bool mul(const Mat<T> &m, const Mat<T> &n, Mat<T> &dst) {
   }
 
   return true;
+}
+
+template <typename T>
+double determinant(Mat<T> &A) {
+  int n = A.ncols();
+
+  double det = 1.0;
+
+  // Row operations for i = 0, ,,,, n - 2 (n-1 not needed)
+  for (int i = 0; i < n - 1; i++) {
+    // Partial pivot: find row r below with largest element in column i
+    int r = i;
+    double maxA = std::abs(A.at(i, i));
+    for (int k = i + 1; k < n; k++) {
+      double val = std::abs(A.at(k, i));
+      if (val > maxA) {
+        r = k;
+        maxA = val;
+      }
+    }
+    if (r != i) {
+      for (int j = i; j < n; j++) {
+        std::swap(A.at(i, j), A.at(r, j));
+      }
+      det = -det;
+    }
+
+    // Row operations to make upper-triangular
+    double pivot = A.at(i, i);
+    // check if Singular matrix
+    if (std::abs(pivot) < TOLLERANCE) {
+      return (0.0);
+    }
+
+    // On lower rows
+    for (int r = i + 1; r < n; r++) {
+      // Multiple of row i to clear element in ith column
+      double multiple = A.at(r, i) / pivot;
+      for (int j = i; j < n; j++) {
+        A.at(r, j) -= multiple * A.at(i, j);
+      }
+    }
+    det *= pivot;  // Determinant is product of diagonal
+  }
+
+  det *= A.at(n - 1, n - 1);
+
+  return det;
+}
+
+template <typename T>
+double Determinant(const Mat<T> &B) {
+  Mat<T> A(B);
+  return determinant(A);
 }
 
 }  // namespace la
