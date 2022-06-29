@@ -50,11 +50,11 @@ class Mat {
       : rows_(rows), cols_(cols), quantity_(rows * cols) {
     try {
       if (!scope_ptr) {
-        throw "scope_ptr == nullptr";
+        throw la::IncorrectScopeSpace("scope_ptr == nullptr");
       }
 
       if (scope_size < quantity_ * sizeof(T)) {
-        throw "scope memory space is not enouph";
+        throw la::IncorrectScopeSpace("scope memory space is not enouph");
       }
 
       ptr_ = scope_ptr;
@@ -63,8 +63,8 @@ class Mat {
         ptr_[i] = val;
       }
 
-    } catch (const std::exception& e) {
-      std::cerr << e.what() << std::endl;
+    } catch (const la::IncorrectScopeSpace& ess) {
+      std::cerr << ess.what() << std::endl;
     }
   }
 

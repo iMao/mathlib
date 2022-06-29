@@ -31,6 +31,17 @@ class IncorrectIndex : public std::exception {
   }
 };
 
+class IncorrectScopeSpace : public std::exception {
+  char warning_msg_[MSG_LENGTH]{};
+
+ public:
+  explicit IncorrectScopeSpace(const char* msg) { strcpy(warning_msg_, msg); }
+  virtual const char* what() const _GLIBCXX_TXN_SAFE_DYN
+      _GLIBCXX_NOTHROW override {
+    return warning_msg_;
+  }
+};
+
 }  // namespace la
 
 #endif
